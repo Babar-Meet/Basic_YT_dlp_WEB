@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Downloader</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Additional styles for checkboxes and merge functionality */
+        .merge-controls {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .merge-options {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .merge-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+        }
+        
+        .merge-btn:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+        
+        .merge-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .format-checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        
+        .format-card {
+            position: relative;
+        }
+        
+        .format-card.selected {
+            border: 2px solid #28a745;
+            background: #f0fff4;
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .resolution-group {
+            margin-bottom: 30px;
+        }
+        
+        .resolution-header {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #dee2e6;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .codec-groups {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .codec-group {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid #e9ecef;
+        }
+        
+        .codec-title {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .format-options {
+            display: grid;
+            gap: 10px;
+        }
+        
+        .format-option {
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .format-option:hover {
+            background: #e9ecef;
+        }
+        
+        .format-option.selected {
+            background: #d4edda;
+            border: 1px solid #28a745;
+        }
+        
+        .format-info {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .format-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        .select-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .direct-download-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .direct-download-btn:hover {
+            background: #5a6fd8;
+        }
+        
+        .original-badge {
+            background: #ffd700;
+            color: #333;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        
+        .selected-count {
+            background: #28a745;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        
+        /* Improved audio grouping */
+        .audio-language-group {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .audio-language-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            color: #555;
+            font-weight: 600;
+        }
+        
+        .language-flag {
+            font-size: 1.2em;
+        }
+        
+        .language-name {
+            flex-grow: 1;
+        }
+        
+        /* Better visual hierarchy */
+        .quality-indicator {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+        
+        .quality-high {
+            background: #28a745;
+            color: white;
+        }
+        
+        .quality-medium {
+            background: #ffc107;
+            color: #333;
+        }
+        
+        .quality-low {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .format-details {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 5px;
+        }
+        
+        .format-tag {
+            background: #e9ecef;
+            color: #666;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+        }
+        
+        /* YouTube quality label */
+        .yt-quality-label {
+            background: #667eea;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-download"></i> YouTube Downloader</h1>
+            <p class="subtitle">Download videos in any format with advanced options</p>
+        </header>
+
+        <main>
+            <div class="input-section">
+                <div class="url-input">
+                    <input type="url" id="urlInput" placeholder="Enter YouTube URL..." required>
+                    <button id="fetchBtn" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Get Formats
+                    </button>
+                </div>
+                <div class="download-path">
+                    <i class="fas fa-folder"></i>
+                    <span>Download Path: <strong>"B:\Downloads\WatchLater"</strong></span>
+                </div>
+            </div>
+
+            <div id="loading" class="loading hidden">
+                <div class="spinner"></div>
+                <p>Fetching video information...</p>
+            </div>
+
+            <div id="error" class="error hidden"></div>
+
+            <div id="videoInfo" class="video-info hidden">
+                <div class="thumbnail-container">
+                    <img id="thumbnail" src="" alt="Video thumbnail">
+                </div>
+                <div class="video-details">
+                    <h2 id="videoTitle"></h2>
+                    <div class="meta-grid">
+                        <div class="meta-item">
+                            <i class="fas fa-user"></i>
+                            <span id="uploader"></span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-eye"></i>
+                            <span id="views"></span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-clock"></i>
+                            <span id="duration"></span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-calendar"></i>
+                            <span id="uploadDate"></span>
+                        </div>
+                    </div>
+                    <p id="description" class="description"></p>
+                </div>
+            </div>
+
+            <div id="formatsSection" class="formats-section hidden">
+                <!-- Merge Controls -->
+                <div id="mergeControls" class="merge-controls hidden">
+                    <div class="merge-options">
+                        <button id="mergeBtn" class="merge-btn" disabled>
+                            <i class="fas fa-blender"></i> Merge Selected (0)
+                        </button>
+                        <button id="clearSelectionBtn" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Clear Selection
+                        </button>
+                    </div>
+                    <div id="selectedCount" class="selected-count">0 formats selected</div>
+                </div>
+
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="video_audio">
+                        <i class="fas fa-film"></i> Video + Audio
+                    </button>
+                    <button class="tab-btn" data-tab="video_only">
+                        <i class="fas fa-video"></i> Video Only
+                    </button>
+                    <button class="tab-btn" data-tab="audio_only">
+                        <i class="fas fa-music"></i> Audio Only
+                    </button>
+                </div>
+
+                <div class="tab-content">
+                    <div id="video_audio" class="tab-pane active">
+                        <div class="format-groups"></div>
+                    </div>
+                    <div id="video_only" class="tab-pane">
+                        <div class="format-groups"></div>
+                    </div>
+                    <div id="audio_only" class="tab-pane">
+                        <div class="format-groups"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="downloadProgress" class="download-progress hidden">
+                <h3><i class="fas fa-cloud-download-alt"></i> Download in Progress</h3>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-info">
+                    <span id="progressPercent">0%</span>
+                    <span id="progressSpeed">Speed: N/A</span>
+                    <span id="progressETA">ETA: N/A</span>
+                </div>
+                <div id="downloadComplete" class="hidden">
+                    <p class="success"><i class="fas fa-check-circle"></i> Download Complete!</p>
+                    <button id="openFolderBtn" class="btn btn-secondary">
+                        <i class="fas fa-folder-open"></i> Open Download Folder
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>Powered by yt-dlp & Flask | Download path: B:\Downloads</p>
+        </footer>
+    </div>
+
+    <script>
+        let currentUrl = '';
+        let currentDownloadId = '';
+        let selectedFormats = new Set();
+        let videoFormats = {};
+        let audioFormats = {};
+
+        document.getElementById('fetchBtn').addEventListener('click', fetchFormats);
+        document.getElementById('urlInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') fetchFormats();
+        });
+        document.getElementById('mergeBtn').addEventListener('click', mergeSelectedFormats);
+        document.getElementById('clearSelectionBtn').addEventListener('click', clearSelection);
+
+        // Function to get YouTube-friendly quality label
+        function getYoutubeQualityLabel(resolution) {
+            if (!resolution || resolution === 'Unknown') return '';
+            
+            try {
+                // Extract height from resolution string (e.g., "1920x1080" -> 1080)
+                const parts = resolution.split('x');
+                if (parts.length < 2) return '';
+                
+                const height = parseInt(parts[1]);
+                
+                // Map heights to YouTube quality labels
+                if (height >= 4320) return '8K (4320p)';
+                if (height >= 2880) return '5K (2880p)';
+                if (height >= 2160) return '4K (2160p)';
+                if (height >= 1440) return '2K (1440p)';
+                if (height >= 1080) return '1080p';
+                if (height >= 720) return '720p';
+                if (height >= 480) return '480p';
+                if (height >= 360) return '360p';
+                if (height >= 240) return '240p';
+                if (height >= 144) return '144p';
+                
+                return `${height}p`;
+            } catch (error) {
+                return '';
+            }
+        }
+
+        async function fetchFormats() {
+            const url = document.getElementById('urlInput').value.trim();
+            if (!url) {
+                showError('Please enter a YouTube URL');
+                return;
+            }
+
+            currentUrl = url;
+            showLoading(true);
+            hideError();
+            hideVideoInfo();
+            hideFormats();
+            hideDownloadProgress();
+            clearSelection();
+
+            try {
+                const response = await fetch('/get_formats', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ url: url })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    showError(data.error);
+                    showLoading(false);
+                    return;
+                }
+
+                displayVideoInfo(data.metadata);
+                displayFormats(data.formats);
+                showLoading(false);
+            } catch (error) {
+                showError('Failed to fetch video information: ' + error.message);
+                showLoading(false);
+            }
+        }
+
+        function displayVideoInfo(metadata) {
+            document.getElementById('videoTitle').textContent = metadata.title;
+            document.getElementById('uploader').textContent = metadata.uploader;
+            document.getElementById('views').textContent = formatNumber(metadata.views) + ' views';
+            document.getElementById('duration').textContent = formatDuration(metadata.duration);
+            document.getElementById('uploadDate').textContent = formatDate(metadata.upload_date);
+            document.getElementById('description').textContent = metadata.description;
+            
+            const thumbnail = document.getElementById('thumbnail');
+            thumbnail.src = metadata.thumbnail;
+            thumbnail.onerror = function() {
+                this.src = 'https://via.placeholder.com/480x360?text=No+Thumbnail';
+            };
+            
+            document.getElementById('videoInfo').classList.remove('hidden');
+        }
+
+        function displayFormats(formats) {
+            // Clear existing tabs
+            ['video_audio', 'video_only', 'audio_only'].forEach(type => {
+                const container = document.getElementById(type).querySelector('.format-groups');
+                container.innerHTML = '';
+            });
+
+            // Store formats for later use
+            videoFormats = formats.video_only;
+            audioFormats = formats.audio_only;
+
+            // Display each type
+            displayVideoAudioFormats(formats.video_audio);
+            displayVideoOnlyFormats(formats.video_only);
+            displayAudioOnlyFormats(formats.audio_only);
+
+            // Setup tab switching
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+                    
+                    btn.classList.add('active');
+                    document.getElementById(btn.dataset.tab).classList.add('active');
+                });
+            });
+
+            document.getElementById('formatsSection').classList.remove('hidden');
+            document.getElementById('mergeControls').classList.remove('hidden');
+        }
+
+        function displayVideoAudioFormats(formats) {
+            const container = document.getElementById('video_audio').querySelector('.format-groups');
+            
+            if (formats.length === 0) {
+                container.innerHTML = '<p class="no-formats">No video+audio formats available</p>';
+                return;
+            }
+
+            // Group by resolution
+            const groupedByRes = {};
+            formats.forEach(format => {
+                const res = format.resolution || 'Unknown';
+                if (!groupedByRes[res]) groupedByRes[res] = [];
+                groupedByRes[res].push(format);
+            });
+
+            // Sort resolutions
+            const sortedResolutions = Object.keys(groupedByRes).sort((a, b) => {
+                if (a === 'Unknown') return 1;
+                if (b === 'Unknown') return -1;
+                
+                const [aWidth, aHeight] = a.split('x').map(Number);
+                const [bWidth, bHeight] = b.split('x').map(Number);
+                
+                return (bHeight * bWidth) - (aHeight * aWidth);
+            });
+
+            sortedResolutions.forEach(resolution => {
+                const resGroup = document.createElement('div');
+                resGroup.className = 'resolution-group';
+                
+                const resHeader = document.createElement('div');
+                resHeader.className = 'resolution-header';
+                const ytQuality = getYoutubeQualityLabel(resolution);
+                resHeader.innerHTML = `<i class="fas fa-expand-arrows-alt"></i> ${resolution} ${ytQuality ? `<span class="yt-quality-label">${ytQuality}</span>` : ''}`;
+                resGroup.appendChild(resHeader);
+
+                // Group by codec
+                const codecGroups = {};
+                groupedByRes[resolution].forEach(format => {
+                    const codec = format.codec_group || 'other';
+                    if (!codecGroups[codec]) codecGroups[codec] = [];
+                    codecGroups[codec].push(format);
+                });
+
+                Object.entries(codecGroups).forEach(([codec, codecFormats]) => {
+                    const codecGroup = document.createElement('div');
+                    codecGroup.className = 'codec-group';
+                    
+                    const codecTitle = document.createElement('div');
+                    codecTitle.className = 'codec-title';
+                    codecTitle.innerHTML = `<i class="fas fa-code"></i> ${codec.toUpperCase()}`;
+                    codecGroup.appendChild(codecTitle);
+
+                    const formatOptions = document.createElement('div');
+                    formatOptions.className = 'format-options';
+                    
+                    // Group by language for video+audio formats
+                    const languageGroups = {};
+                    codecFormats.forEach(format => {
+                        const lang = format.language || 'unknown';
+                        if (!languageGroups[lang]) languageGroups[lang] = [];
+                        languageGroups[lang].push(format);
+                    });
+
+                    Object.entries(languageGroups).forEach(([lang, langFormats]) => {
+                        langFormats.forEach(format => {
+                            formatOptions.appendChild(createFormatOption(format, 'video_audio', lang));
+                        });
+                    });
+                    
+                    codecGroup.appendChild(formatOptions);
+                    resGroup.appendChild(codecGroup);
+                });
+                
+                container.appendChild(resGroup);
+            });
+        }
+
+        function displayVideoOnlyFormats(formats) {
+            const container = document.getElementById('video_only').querySelector('.format-groups');
+            
+            if (formats.length === 0) {
+                container.innerHTML = '<p class="no-formats">No video-only formats available</p>';
+                return;
+            }
+
+            // Group by resolution and codec
+            const groupedByRes = {};
+            formats.forEach(format => {
+                const res = format.resolution || 'Unknown';
+                if (!groupedByRes[res]) groupedByRes[res] = {};
+                
+                const codec = format.codec_group || 'other';
+                if (!groupedByRes[res][codec]) groupedByRes[res][codec] = [];
+                groupedByRes[res][codec].push(format);
+            });
+
+            // Sort resolutions
+            const sortedResolutions = Object.keys(groupedByRes).sort((a, b) => {
+                if (a === 'Unknown') return 1;
+                if (b === 'Unknown') return -1;
+                
+                const [aWidth, aHeight] = a.split('x').map(Number);
+                const [bWidth, bHeight] = b.split('x').map(Number);
+                
+                return (bHeight * bWidth) - (aHeight * aWidth);
+            });
+
+            sortedResolutions.forEach(resolution => {
+                const resGroup = document.createElement('div');
+                resGroup.className = 'resolution-group';
+                
+                const resHeader = document.createElement('div');
+                resHeader.className = 'resolution-header';
+                const ytQuality = getYoutubeQualityLabel(resolution);
+                resHeader.innerHTML = `<i class="fas fa-expand-arrows-alt"></i> ${resolution} ${ytQuality ? `<span class="yt-quality-label">${ytQuality}</span>` : ''}`;
+                resGroup.appendChild(resHeader);
+
+                const codecGroups = document.createElement('div');
+                codecGroups.className = 'codec-groups';
+                
+                Object.entries(groupedByRes[resolution]).forEach(([codec, formats]) => {
+                    const codecGroup = document.createElement('div');
+                    codecGroup.className = 'codec-group';
+                    
+                    const codecTitle = document.createElement('div');
+                    codecTitle.className = 'codec-title';
+                    codecTitle.innerHTML = `<i class="fas fa-code"></i> ${codec.toUpperCase()}`;
+                    codecGroup.appendChild(codecTitle);
+
+                    const formatOptions = document.createElement('div');
+                    formatOptions.className = 'format-options';
+                    
+                    formats.forEach(format => {
+                        formatOptions.appendChild(createFormatOption(format, 'video_only'));
+                    });
+                    
+                    codecGroup.appendChild(formatOptions);
+                    codecGroups.appendChild(codecGroup);
+                });
+                
+                resGroup.appendChild(codecGroups);
+                container.appendChild(resGroup);
+            });
+        }
+
+        function displayAudioOnlyFormats(formats) {
+            const container = document.getElementById('audio_only').querySelector('.format-groups');
+            
+            if (formats.length === 0) {
+                container.innerHTML = '<p class="no-formats">No audio-only formats available</p>';
+                return;
+            }
+
+            // Group by codec and language
+            const groupedByCodec = {};
+            formats.forEach(format => {
+                const codec = format.codec_group || 'other';
+                if (!groupedByCodec[codec]) groupedByCodec[codec] = {};
+                
+                const lang = format.language || 'unknown';
+                if (!groupedByCodec[codec][lang]) groupedByCodec[codec][lang] = [];
+                groupedByCodec[codec][lang].push(format);
+            });
+
+            Object.entries(groupedByCodec).forEach(([codec, langGroups]) => {
+                const codecGroup = document.createElement('div');
+                codecGroup.className = 'codec-group';
+                
+                const codecTitle = document.createElement('div');
+                codecTitle.className = 'codec-title';
+                codecTitle.innerHTML = `<i class="fas fa-code"></i> ${codec.toUpperCase()} Audio`;
+                codecGroup.appendChild(codecTitle);
+
+                // Group by language with better visual grouping
+                Object.entries(langGroups).forEach(([lang, langFormats]) => {
+                    const languageGroup = document.createElement('div');
+                    languageGroup.className = 'audio-language-group';
+                    
+                    const languageHeader = document.createElement('div');
+                    languageHeader.className = 'audio-language-header';
+                    
+                    const languageFlag = document.createElement('i');
+                    languageFlag.className = 'fas fa-language language-flag';
+                    
+                    const languageName = document.createElement('span');
+                    languageName.className = 'language-name';
+                    languageName.textContent = lang.toUpperCase();
+                    
+                    languageHeader.appendChild(languageFlag);
+                    languageHeader.appendChild(languageName);
+                    
+                    // Check if any format in this language is original
+                    const hasOriginal = langFormats.some(f => f.is_original);
+                    if (hasOriginal) {
+                        const originalBadge = document.createElement('span');
+                        originalBadge.className = 'original-badge';
+                        originalBadge.textContent = 'ORIGINAL';
+                        languageHeader.appendChild(originalBadge);
+                    }
+                    
+                    languageGroup.appendChild(languageHeader);
+
+                    const formatOptions = document.createElement('div');
+                    formatOptions.className = 'format-options';
+                    
+                    langFormats.forEach(format => {
+                        formatOptions.appendChild(createFormatOption(format, 'audio_only'));
+                    });
+                    
+                    languageGroup.appendChild(formatOptions);
+                    codecGroup.appendChild(languageGroup);
+                });
+                
+                container.appendChild(codecGroup);
+            });
+        }
+
+        function createFormatOption(format, type, language = null) {
+            const option = document.createElement('div');
+            option.className = 'format-option';
+            option.dataset.formatId = format.format_id;
+            option.dataset.type = type;
+            
+            const size = format.filesize ? formatSize(format.filesize) : 'Unknown size';
+            const languageName = language || format.language || '';
+            
+            const formatInfo = document.createElement('div');
+            formatInfo.className = 'format-info';
+            
+            const formatHeader = document.createElement('div');
+            formatHeader.style.display = 'flex';
+            formatHeader.style.alignItems = 'center';
+            formatHeader.style.gap = '10px';
+            
+            const formatName = document.createElement('strong');
+            formatName.textContent = format.ext.toUpperCase();
+            
+            // Add quality indicator based on codec
+            if (format.codec_group === 'av01' || format.codec_group === 'vp09' || format.codec_group === 'h265') {
+                const qualityBadge = document.createElement('span');
+                qualityBadge.className = 'quality-indicator quality-high';
+                qualityBadge.textContent = 'HIGH';
+                formatHeader.appendChild(qualityBadge);
+            } else if (format.codec_group === 'h264') {
+                const qualityBadge = document.createElement('span');
+                qualityBadge.className = 'quality-indicator quality-medium';
+                qualityBadge.textContent = 'MEDIUM';
+                formatHeader.appendChild(qualityBadge);
+            }
+            
+            if (languageName && type !== 'video_only') {
+                const langSpan = document.createElement('span');
+                langSpan.textContent = languageName.toUpperCase();
+                langSpan.style.color = '#666';
+                formatHeader.appendChild(langSpan);
+            }
+            
+            if (format.is_original && type === 'audio_only') {
+                // Original badge is shown at language group level for audio
+            } else if (format.is_original && type !== 'audio_only') {
+                const originalBadge = document.createElement('span');
+                originalBadge.className = 'original-badge';
+                originalBadge.textContent = 'ORIGINAL';
+                formatHeader.appendChild(originalBadge);
+            }
+            
+            const formatDetails = document.createElement('div');
+            formatDetails.className = 'format-details';
+            
+            formatDetails.innerHTML = `
+                <span class="format-tag"><i class="fas fa-hdd"></i> ${size}</span>
+                ${format.fps ? `<span class="format-tag"><i class="fas fa-tachometer-alt"></i> ${format.fps}fps</span>` : ''}
+                ${format.vcodec && format.vcodec !== 'none' ? `<span class="format-tag"><i class="fas fa-video"></i> ${format.vcodec}</span>` : ''}
+                ${format.acodec && format.acodec !== 'none' && type !== 'video_only' ? `<span class="format-tag"><i class="fas fa-volume-up"></i> ${format.acodec}</span>` : ''}
+            `;
+            
+            formatInfo.appendChild(formatName);
+            formatInfo.appendChild(formatHeader);
+            formatInfo.appendChild(formatDetails);
+            
+            const selectControls = document.createElement('div');
+            selectControls.className = 'select-controls';
+            
+            if (type !== 'video_audio') {
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.className = 'format-checkbox';
+                checkbox.dataset.formatId = format.format_id;
+                checkbox.dataset.type = type;
+                checkbox.addEventListener('change', function(e) {
+                    e.stopPropagation();
+                    toggleFormatSelection(format.format_id, type);
+                    option.classList.toggle('selected', this.checked);
+                });
+                selectControls.appendChild(checkbox);
+            }
+            
+            const downloadBtn = document.createElement('button');
+            downloadBtn.className = 'direct-download-btn';
+            downloadBtn.innerHTML = '<i class="fas fa-download"></i> Download';
+            downloadBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                startDownload(format.format_id);
+            });
+            selectControls.appendChild(downloadBtn);
+            
+            option.appendChild(formatInfo);
+            option.appendChild(selectControls);
+            
+            option.addEventListener('click', function(e) {
+                if (!e.target.closest('.direct-download-btn') && !e.target.closest('.format-checkbox')) {
+                    if (type !== 'video_audio') {
+                        const checkbox = this.querySelector('.format-checkbox');
+                        checkbox.checked = !checkbox.checked;
+                        checkbox.dispatchEvent(new Event('change'));
+                    }
+                }
+            });
+            
+            return option;
+        }
+
+        function toggleFormatSelection(formatId, type) {
+            if (selectedFormats.has(formatId)) {
+                selectedFormats.delete(formatId);
+            } else {
+                selectedFormats.add(formatId);
+            }
+            
+            updateSelectionUI();
+        }
+
+        function updateSelectionUI() {
+            const count = selectedFormats.size;
+            const selectedCount = document.getElementById('selectedCount');
+            const mergeBtn = document.getElementById('mergeBtn');
+            
+            selectedCount.textContent = `${count} format${count !== 1 ? 's' : ''} selected`;
+            mergeBtn.textContent = `Merge Selected (${count})`;
+            mergeBtn.disabled = count === 0;
+            
+            if (count === 2) {
+                const selected = Array.from(selectedFormats);
+                const hasVideo = selected.some(id => videoFormats.find(f => f.format_id === id));
+                const hasAudio = selected.some(id => audioFormats.find(f => f.format_id === id));
+                mergeBtn.disabled = !(hasVideo && hasAudio);
+            }
+        }
+
+        function clearSelection() {
+            selectedFormats.clear();
+            document.querySelectorAll('.format-checkbox').forEach(cb => cb.checked = false);
+            document.querySelectorAll('.format-option').forEach(opt => opt.classList.remove('selected'));
+            updateSelectionUI();
+        }
+
+        async function mergeSelectedFormats() {
+            if (selectedFormats.size < 2) {
+                showError('Please select at least 2 formats to merge (one video and one audio)');
+                return;
+            }
+            
+            const formats = Array.from(selectedFormats);
+            const videoFormat = formats.find(id => videoFormats.find(f => f.format_id === id));
+            const audioFormat = formats.find(id => audioFormats.find(f => f.format_id === id));
+            
+            if (!videoFormat || !audioFormat) {
+                showError('Please select one video format and one audio format to merge');
+                return;
+            }
+            
+            if (!currentUrl) return;
+
+            showLoading(true);
+            
+            try {
+                const response = await fetch('/merge_formats', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        url: currentUrl,
+                        video_format_id: videoFormat,
+                        audio_format_id: audioFormat
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.error) {
+                    showError(data.error);
+                    showLoading(false);
+                    return;
+                }
+                
+                currentDownloadId = data.download_id;
+                showLoading(false);
+                hideFormats();
+                showDownloadProgress();
+                pollDownloadProgress();
+                clearSelection();
+            } catch (error) {
+                showError('Failed to merge formats: ' + error.message);
+                showLoading(false);
+            }
+        }
+
+        async function startDownload(formatId) {
+            if (!currentUrl) return;
+
+            showLoading(true);
+            
+            try {
+                const response = await fetch('/start_download', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        url: currentUrl,
+                        format_id: formatId
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.error) {
+                    showError(data.error);
+                    showLoading(false);
+                    return;
+                }
+                
+                currentDownloadId = data.download_id;
+                showLoading(false);
+                hideFormats();
+                showDownloadProgress();
+                pollDownloadProgress();
+            } catch (error) {
+                showError('Failed to start download: ' + error.message);
+                showLoading(false);
+            }
+        }
+
+        async function pollDownloadProgress() {
+            const interval = setInterval(async () => {
+                const response = await fetch(`/download_status/${currentDownloadId}`);
+                const status = await response.json();
+                
+                if (status.status === 'completed') {
+                    updateProgressBar(100);
+                    document.getElementById('progressSpeed').textContent = '';
+                    document.getElementById('progressETA').textContent = '';
+                    document.getElementById('downloadComplete').classList.remove('hidden');
+                    clearInterval(interval);
+                } else if (status.status === 'downloading') {
+                    updateProgressBar(status.progress);
+                    document.getElementById('progressSpeed').textContent = `Speed: ${status.speed || 'N/A'}`;
+                    document.getElementById('progressETA').textContent = `ETA: ${status.eta || 'N/A'}`;
+                } else if (status.status === 'error') {
+                    showError('Download failed: ' + status.error);
+                    hideDownloadProgress();
+                    clearInterval(interval);
+                }
+            }, 1000);
+        }
+
+        function updateProgressBar(percent) {
+            document.getElementById('progressFill').style.width = percent + '%';
+            document.getElementById('progressPercent').textContent = percent.toFixed(1) + '%';
+        }
+
+        // Utility functions
+        function formatNumber(num) {
+            return new Intl.NumberFormat().format(num);
+        }
+
+        function formatDuration(seconds) {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            
+            if (hours > 0) {
+                return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }
+            return `${minutes}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return 'Unknown';
+            const year = dateStr.substring(0, 4);
+            const month = dateStr.substring(4, 6);
+            const day = dateStr.substring(6, 8);
+            return `${year}-${month}-${day}`;
+        }
+
+        function formatSize(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // UI Helper functions
+        function showLoading(show) {
+            document.getElementById('loading').classList.toggle('hidden', !show);
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+        }
+
+        function hideError() {
+            document.getElementById('error').classList.add('hidden');
+        }
+
+        function hideVideoInfo() {
+            document.getElementById('videoInfo').classList.add('hidden');
+        }
+
+        function hideFormats() {
+            document.getElementById('formatsSection').classList.add('hidden');
+            document.getElementById('mergeControls').classList.add('hidden');
+        }
+
+        function showDownloadProgress() {
+            document.getElementById('downloadProgress').classList.remove('hidden');
+            document.getElementById('downloadComplete').classList.add('hidden');
+            updateProgressBar(0);
+        }
+
+        function hideDownloadProgress() {
+            document.getElementById('downloadProgress').classList.add('hidden');
+        }
+
+        // Open download folder
+        document.getElementById('openFolderBtn').addEventListener('click', () => {
+            window.open('file:///B:/Downloads', '_blank');
+        });
+    </script>
+</body>
+</html>
